@@ -747,69 +747,8 @@ int publishPost(int currentID,char publish [])
         scanf("%d",&post.cost);
 
         printf("\nSeleccione un lugar de reunion\n");
-        //selectPlace(publish,&post);
+        selectPlace(publish,&post);
 
-        // printf("\nSeleccione el lugar: \n");
-        printf("\n [1] - La Fonte D´Oro || Colon y Buenos Aires Buenos Aires 2098 \n");
-        printf("\n [2] - La Fonte D´Oro || Constitucion y Av. Tejedor \n");
-        printf("\n [3] - La Fonte D´Oro || Luro y 180 \n");
-        printf("\n [4] - La Fonte D´Oro || Urquiza y la Costa \n");
-        printf("\n [5] - Café Martínez  || Av. Colón 3651 · 7 a 22 \n");
-        printf("\n [6] - Di Mero Espresso Cafeteria || Martin Miguel de Guemes 2483 - 7 a 20 \n");
-        printf("\n [7] - ADORADO Cafe & Bar || Paseo Aldrey Shopping 8- 20:30 \n");
-        printf("\n [8] - De Postres || Carlos Alvear 2889 \n");
-        printf("\n [9] - Croissant Cafe || Cordoba 2361 \n");
-        printf("\n [10]-Adorado Cafe || Av. Independencia 2546 \n");
-        do
-        {
-            scanf("%d",&menu);
-            switch(menu)
-            {
-            case 1:
-                strcpy(post.places,"La Fonte D´Oro- Colón y Buenos Aires Buenos Aires 2098");
-                break;
-            case 2:
-                strcpy(post.places,"La Fonte D´Oro - Constitucion y Av. Tejedor");
-                break;
-            case 3:
-                strcpy(post.places,"La Fonte D´Oro - Luro y 180");
-                break;
-            case 4:
-                strcpy(post.places,"La Fonte D´Oro - Urquiza y la Costa");
-                break;
-            case 5:
-                strcpy(post.places,"Cafe Martinez  - Av. Colón 3651 · 7 a 22");
-                break;
-            case 6:
-                strcpy(post.places,"Di Mero Espresso Cafeteria - Martin Miguel de Guemes 2483 - 7 a 20");
-                break;
-            case 7:
-                strcpy(post.places,"ADORADO Cafe & Bar - Paseo Aldrey Shopping 8- 20:30");
-                break;
-            case 8:
-                strcpy(post.places,"De Postres - Carlos Alvear 2889");
-                break;
-            case 9:
-                strcpy(post.places,"Croissant Cafe - Cordoba 2361");
-                break;
-            case 10:
-                strcpy(post.places,"Adorado Cafe - Av. Independencia 2546");
-                break;
-            }
-            if(menu>0 && menu>=11)
-            {
-                printf("\nLa opcion ingresada es inconrrecta, vuelva a ingresar.\n");
-            }
-        }
-        while(menu>0 && menu>=11);
-
-//        i=searchNamePOST(currentID,mainArchivo,*userNamePost1);
-
-        //strcpy(userNamePost2,userNamePost);
-        //printf("\n%s MIRA ESTO PAPA",i);
-        ///strcpy(userNamePost1,i);
-
-        /// printf("\n ---------->%s",userNamePost1);
         user=searchNamePOST(currentID,mainArchivo);
         iDpost++;
         strcpy(post.userNamePost,userNamePost1);
@@ -841,7 +780,7 @@ void statusPublisPost (int postStatus)
 
 ///***************************************************************************///
 ///***************************************************************************/// PUBLICAR
-/*
+
 void selectPlace(char publish[],stPublish post)
 {
     FILE * pPublish = fopen(publish,"ab");
@@ -893,16 +832,16 @@ void selectPlace(char publish[],stPublish post)
             strcpy(post.places,"Adorado Cafe - Av. Independencia 2546");
             break;
         }
-        if(menu>0 && menu>=10)
+        if(menu>0 && menu>=11)
         {
             printf("\nLa opcion ingresada es inconrrecta, vuelva a ingresar.\n");
         }
     }
-    while(menu>0 && menu>=10);
+    while(menu>0 && menu>=11);
     fwrite(&post,sizeof(stPublish),1,pPublish);
     fclose(pPublish);
 }
-*/
+
 ///***************************************************************************///
 ///***************************************************************************/// PUBLICAR
 
