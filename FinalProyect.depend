@@ -1,7 +1,8 @@
 # depslib dependency file v1.0
-1624581687 source:c:\users\agustin\documents\utn\programacion y laboratorio\programacion y laboratorio\finalproyect\finalproyect\main.c
+1625180720 source:c:\users\agustin\documents\utn\programacion y laboratorio\programacion y laboratorio\finalproyect\finalproyect\main.c
 	<stdio.h>
 	<stdlib.h>
 	<conio.h>
 	<string.h>
+	<time.h>
 

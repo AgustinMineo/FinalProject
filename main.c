@@ -2,13 +2,11 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <string.h>
+#include <time.h>
 const int dim_users = 100;
-const int dim_publish = 300;
+const int dim_publish = 200;
 const int dim_messenge = 150;
 const int ESC = 27;
-const char mainArchivo[]= {"users.dat"};
-const char publish[]= {"publish.dat"};
-const char messangerUsuarios[]= {"messangerUsuarios.dat"};
 
 typedef struct
 {
@@ -16,6 +14,7 @@ typedef struct
     int idReceiver;
     int idContent;
     char message [150];
+    char timeSend[50];
     int read;
 } stMessenge;
 
@@ -23,7 +22,7 @@ typedef struct
 {
     int idUserContact;
     int idContent;
-    char userNamePost[20];
+    char userNamePost[30];
     char title [30];
     char description[300];
     char categoria[30];
@@ -31,10 +30,12 @@ typedef struct
     int active;
     char report[100];
     int cost;
-    int time;
+    char time[30];
     char places[100];
-    int share;
+    int share;                   ///EN CURSO
     char feedback[60];
+    char currentTIME[50];
+    int idFeedback;
 } stPublish;
 
 typedef struct
@@ -43,39 +44,52 @@ typedef struct
     char lastName[50];
     char firstName[50];
     int dni;
-    char userName[20];
+    char userName[30];
     char password[30];
     char city[50];
     char places[150];
     int age;
     char email[50];
-    char gender[40];
-    float points;
+    char gender[30];
+    int points;
     int level;
+    char ranki[20];
     char topics[50];
-    int role;
+    int role;              ///EN CURSO
     int status;
-    stPublish post;
 } stUser;
 
-///***************************************************************************///
-///***************************************************************************///
-void showPublish(char publish[],char mainArchivo[],int currentID); ///Todas las publish
+///**********************************************************************************************************///PUBLISH
+
+//void showPublish(char publish[],char mainArchivo[],int currentID,char);
 stUser searchNamePOST(int currentID, char mainArchivo[]);
 stUser searchUserMessenge(char name[],char mainArchivo[]);
 void showMyUser(stUser a);
+int searchUserName(char mainArchivo[], char name[]);
 int main()
 {
+    char mainArchivo[]= {"users.dat"};
+    char publishArch[]= {"publish.dat"};
+    char messangerUsuarios[]= {"messangerUsuarios.dat"};
     stPublish publish [dim_publish];
     stUser user [dim_users];
     stMessenge messagesUser[dim_messenge];
 
+    time_t tiempo = time(0);
+    struct tm *tlocal = localtime(&tiempo);
+    char currentTIME[50];
+    strftime(currentTIME,50,"%d/%m/%y a las %H:%M:%S",tlocal);
+
     int control,menu;
     do
     {
-        printf("\n \t \t \t \t \t BIENVENIDOS AL HIMALAYA\n");
-        printf("\n [1] - Registrar un usuario\n");
-        printf("\n [2] - Logear un usuario\n");
+        printf("\n\t\t\t\t\t\t ==================== \n");
+        printf("\n\t\t\t\t\t\t   [4] Punteros   \n");
+        printf("\n\t\t\t\t\t\t ==================== \n\n\n");
+        printf("\n\t\t\t\t\t[1] - Registrate!\n");
+        printf("\n\t\t\t\t\t[2] - Inicia Sesion!\n");
+        printf("\n\n\n\t\t\t\t\t");
+
         scanf("%d",&menu);
         switch(menu)
         {
@@ -86,12 +100,11 @@ int main()
             break;
         case 2:
             system("cls");
-            showUser(mainArchivo);
             fflush(stdin);
-            login(mainArchivo);
+            login(mainArchivo, publishArch,messangerUsuarios,currentTIME);
             break;
         }
-        printf("\n Desea ingresar nuevamente, ESC para finalizar \n");
+        printf("\n Presione cualquier tecla volver al Inicio, ESC para salir... \n");
         fflush(stdin);
         control=getch();
         system("cls");
@@ -100,15 +113,14 @@ int main()
     return 0;
 }
 
-///***************************************************************************///
-///***************************************************************************/// LOGIN
+///**********************************************************************************************************/// LOGIN
 
-void login(char mainArchivo[])
+void login(char mainArchivo[], char publishArch[], char messangerUsuarios[],char currentTIME[50])
 {
     int control;
-    char username[20];
+    char username[30];
     char password[30];
-    char userCopyName[20];
+    char userCopyName[30];
     FILE *log =fopen(mainArchivo,"r+b");
     stUser user;
     int status=0;
@@ -118,19 +130,26 @@ void login(char mainArchivo[])
     {
         do
         {
-            printf("\nIngrese el nombre de Usuario: \n");
+            printf("\n \t\t\t\t\t*************************************");
+            printf("\n \t\t\t\t\t***                               ***");
+            printf("\n \t\t\t\t\t*** Ingrese el nombre de Usuario: ***");
+            printf("\n \t\t\t\t\t***                               ***");
+            printf("\n \t\t\t\t\t*************************************");
+            printf("\n \t\t\t\t\t--> ");
+            fflush(stdin);
             gets(username);
+            printf("\n\n\n");
 
             if(strlen(username)==0)
             {
-                printf("Wrong Username");
+                printf("\n\t  Password incorrecto, intente nuevamente...");
             }
             else
             {
                 userStatus=searchUserName(mainArchivo,username);
                 if(userStatus==0)
                 {
-                    printf("\nThe username doesn`t exist\n");
+                    printf("\n\t  El Usuario ingresado no existe, intente nuevamente...\n");
                 }
             }
         }
@@ -138,27 +157,33 @@ void login(char mainArchivo[])
 
         do
         {
-            rewind(log);
-            printf("\n Ingrese el password\n");
-            gets(password);
 
+            printf("\n \t\t\t\t\t*************************************");
+            printf("\n \t\t\t\t\t***                               ***");
+            printf("\n \t\t\t\t\t*** Ingrese la contrasenia:       ***");
+            printf("\n \t\t\t\t\t***                               ***");
+            printf("\n \t\t\t\t\t*************************************");
+            printf("\n \t\t\t\t\t--> ");
+            fflush(stdin);
+            gets(password);
+            rewind(log);
             while(fread(&user,sizeof(user),1,log)>0)
             {
-                if(strcmp(username,user.userName)== 0 && strcmp(password, user.password)== 0)
+                if(strcmp(username,user.userName)== 0 && strcmp(password,user.password)== 0)
                 {
                     system("cls");
-                    printf("\nWelcome %s\n", username);
+                    printf("\n  Hola de nuevo %s! \n\n", username);
                     strcpy(userCopyName,username);
                     currentID=user.idUser;
-                    userActive(mainArchivo,currentID);
-                    mainMenu(currentID, userCopyName);
+                    userActive(log,currentID);
+                    mainMenu(currentID,publishArch,mainArchivo,messangerUsuarios,currentTIME);
                     status=1;
                 }
             }
             if(status==0)
             {
-                printf("\nPassword is wrong\n");
-                printf("\nDesea volver a intentar, ESC para finalizar\n");
+                printf("\n\t  El password ingresado es incorrecto...\n");
+                printf("\n\t  Presione cualquier tecla para volver a intentar, ESC para salir.\n");
                 fflush(stdin);
                 control=getch();
             }
@@ -169,8 +194,7 @@ void login(char mainArchivo[])
     fclose(log);
 }
 
-///***************************************************************************///
-///***************************************************************************/// REGISTRO/LOGIN
+///**********************************************************************************************************/// REGISTRO/LOGIN
 
 int searchUserName(char mainArchivo[], char name[])
 {
@@ -191,12 +215,9 @@ int searchUserName(char mainArchivo[], char name[])
     return flag;
 }
 
-///***************************************************************************///
-///***************************************************************************/// REGISTRO/LOGIN
-
-void userActive(char arch[], int currentID)
+void userActive(char mainArchivo[], int currentID)
 {
-    FILE *pArch = fopen(arch,"r+b");
+    FILE *pArch = fopen(mainArchivo,"r+b");
     stUser user;
     if(pArch)
     {
@@ -212,46 +233,50 @@ void userActive(char arch[], int currentID)
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// REGISTRO
+///**********************************************************************************************************/// REGISTRO
 
 void registe(char mainArchivo[])
 {
     int flag=0;
     stUser user;
-    FILE *User_Arch = fopen(mainArchivo, "ab");
+    FILE *User_Arch = fopen(mainArchivo,"ab");
     int i=lastID(mainArchivo);
 
     if (User_Arch!=NULL)
     {
         fflush(stdin);
-        printf("\nIngrese su apellido: \n");
+        printf("\n  Ingrese su Apellido: \n");
+        printf("\n --->  ");
         gets(user.lastName);
 
         fflush(stdin);
-        printf("\n Ingrese su nombre:  \n");
+        printf("\n  Ingrese su Nombre:  \n");
+        printf("\n --->  ");
         gets(user.firstName);
 
         do
         {
-            printf("\n Ingrese su edad: \n");
+            printf("\n  Ingrese su edad: \n");
+            printf("\n --->  ");
             scanf("%d",&user.age);
             flag=ageOver(user.age);
-            if(flag==0)
-            {
-                printf("\nLa edad tiene que ser superior a 16 anios\n");
-            }
         }
         while(flag==0);
         do
         {
-            printf("\n Ingrese su DNI: \n");
+            printf("\n  Ingrese su DNI: \n");
+            printf("\n --->  ");
             fflush(stdin);
             scanf("%d",&user.dni);
-            flag=validationDNI(mainArchivo,user.dni);
+            flag=validationDNI(User_Arch,user.dni);
             if(flag==1)
             {
-                printf("\n DNI ya registrado, ingrese un nuevo DNI\n");
+                printf("\n  DNI ya registrado, ingrese un nuevo DNI\n");
+            }
+            flag=sizeDNI(user.dni);
+            if(flag==1)
+            {
+                printf("\n DNI incorrecto\n");
             }
         }
         while(flag==1);
@@ -259,12 +284,13 @@ void registe(char mainArchivo[])
         do
         {
             fflush(stdin);
-            printf("\n Ingrese el nombre de Usuario: \n");
+            printf("\n Ingrese su nombre de Usuario: \n");
+            printf("\n --->  ");
             scanf("%s",&user.userName);
-            flag=searchUserName(mainArchivo,user.userName);
+            flag=searchUserName(User_Arch,user.userName);
             if(flag==1)
             {
-                printf("\nNombre de usuario existente, ingrese otro nombre de usuario\n");
+                printf("\n  Nombre de Usuario ya resgistrado, intente nuevamente...\n");
             }
 
         }
@@ -272,19 +298,28 @@ void registe(char mainArchivo[])
 
 
         fflush(stdin);
-        printf("\n Ingrese la contrasenia: \n");
+        printf("\n  Ingrese su password: \n");
+        printf("\n --->  ");
         scanf("%s",&user.password);
 
+        printf("\n  Ingrese su correo electronico \n");
+        printf("\n --->  ");
         fflush(stdin);
-        printf("\n Ingrese la Ciudad: \n");
+        gets(user.email);
+
+        fflush(stdin);
+        printf("\n  Ingrese su ciudad actual: \n");
+        printf("\n --->  ");
         scanf("%s",&user.city);
 
         fflush(stdin);
-        printf("\n Ingrese el genero: \n");
+        printf("\n  Ingrese su percepcion de genero: \n");
+        printf("\n --->  ");
         scanf("%s",&user.gender);
         i++;
         user.idUser=i;
         user.status=1;
+        user.points=0;
 
         fwrite(&user, sizeof(stUser),1, User_Arch);
 
@@ -292,14 +327,28 @@ void registe(char mainArchivo[])
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// REGISTRO
+///**********************************************************************************************************/// VALIDAR DNI STRLEN
+int sizeDNI(int dni)
+{
+    int flag=0;
+    int value=0;
 
-int validationDNI(char arch[], int dni)
+    value=strlen(dni);
+    if(value<8 || value>8)
+    {
+        flag=1;
+    }
+    return flag;
+}
+///**********************************************************************************************************/// VALIDAR DNI STRLEN
+
+///**********************************************************************************************************/// VALIDACION DNI
+
+int validationDNI(char mainArchivo[], int dni)
 {
     int flag= 0;
     stUser u;
-    FILE *User_Arch = fopen(arch,"rb");
+    FILE *User_Arch = fopen(mainArchivo,"rb");
     if(User_Arch)
     {
         while(flag==0 && fread(&u, sizeof(stUser),1, User_Arch)>0)
@@ -314,207 +363,537 @@ int validationDNI(char arch[], int dni)
     return flag;
 }
 
-///***************************************************************************///
-///***************************************************************************/// REGISTRO
-
 int ageOver(int age)
 {
     int flag;
-    if(age>16)
+    if(age>16 && age<105)
     {
         flag=1;
     }
+    else
+    {
+        if(age<16)
+        {
+            printf("Usted debe tener mas de 16 anios para registrarse");
+        }
+        else
+        {
+            printf("\nIngrese una edad correcta\n");
+        }
+    }
+
     return flag;
 }
 
-///***************************************************************************///
-///***************************************************************************/// ID USUARIO
+///**********************************************************************************************************/// USER ID
 
-int lastID(char archivo[])
+int lastID(char mainArchivo[])
 {
-    FILE *pArch =fopen(archivo,"r+b");
-    stUser a;
+    FILE *User_Arch =fopen(mainArchivo,"r+b");
+    stUser user;
     int lastId=0;
-    if(pArch)
+    if(User_Arch)
     {
-        fseek(pArch, -1*sizeof(stUser), SEEK_END);
-        if(fread(&a, sizeof(stUser),1,pArch)>0)
+        fseek(User_Arch, -1*sizeof(stUser), SEEK_END);
+        if(fread(&user, sizeof(stUser),1,User_Arch)>0)
         {
-            lastId=a.idUser;
+            lastId=user.idUser;
         }
-        fclose(pArch);
+        fclose(User_Arch);
     }
     return lastId;
 }
 
-///***************************************************************************///
-///***************************************************************************/// MENU USUARIO
+///**********************************************************************************************************/// MENU PRINCIPAL
 
-void mainMenu(int currentID)
+void mainMenu(int currentID, char publishArch[], char mainArchivo[], char messangerUsuarios[],char currentTIME[50])
 {
-    stPublish aux;
-    stUser user;
     int idContent;
     int menu,control;
 
     do
     {
-        printf("Bienvenido, que desea realizar");
-        printf("\n [1] - Mensajes \n");
-        printf("\n [2] - Post \n");
-        printf("\n [3] - Editar perfil \n");
-        printf("\n [4] - Cerrar sesion \n");
-        // printf("\n [5] - Editar post\n");
+        printf("\n\t Bienvenido, que desea consultar? \n\n");
+        printf("\n\t\t [1] - Casilla de Mensajes \n");
+        printf("\n\t\t [2] - Posts \n");
+        printf("\n\t\t [3] - Editar perfil \n");
+        printf("\n\t\t [4] - Cerrar sesion \n");
+        printf("\n\t\t  ");
         scanf("%d",&menu);
 
         switch(menu)
         {
         case 1:
-            messengeMenu(currentID);
+            messengeMenu(currentID,mainArchivo,messangerUsuarios,currentTIME);
             break;
         case 2:
-            postMenu(currentID, idContent);
+            postMenu(currentID, idContent, publishArch,mainArchivo,currentTIME);
             break;
         case 3:
-            editUserMenu(currentID);
+            editUserMenu(currentID,mainArchivo);
             break;
         case 4:
-            printf("\nVuelva pronto\n");
+            printf("\n  Saliendo... Presione ESC\n");
             control=ESC;
             break;
-            //   case 5:
-            //       editPostMenu(idContent,publish,currentID);
-            //      break;
         }
-        // printf("\nEnter para continuar, ESC para salir.\n");
-        //  fflush(stdin);
-        //  control=getch();
+
         system("cls");
     }
     while(control!=ESC);
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
-void postMenu(int currentID, int idContent)
+///**********************************************************************************************************/// MENU POST
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+///**************************************            Posteos                          ********************************************///
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+void postMenu(int currentID, int idContent, char publishArch[], char mainArchivo[],char currentTIME[50])
 {
-    FILE *pPost = fopen(publish,"r+b");
-    stPublish post;
-    stUser user;
+    system("cls");
     int menu,control,deletepost;
+    int like;
+    int validos;
+    stPublish postArray[5];
 
     do
     {
-        printf("\n\t Seleccione una opcion \n");
-        printf("\n\t [1] - Mis post \n");
-        printf("\n\t [2] - Ver post \n");
-        printf("\n\t [3] - Crear post \n");
-        printf("\n\t [4] - Editar post \n");
-        /// printf("\n\t [5] - Eliminar post \n");
+        printf("\n\t Seleccione una accion \n\n");
+        printf("\n\t\t [1] - Mis posts \n");
+        printf("\n\t\t [2] - Ver post \n");
+        printf("\n\t\t [3] - Crear post \n");
+        printf("\n\t\t [4] - Editar post \n");
+        printf("\n\t\t [5] - Otros  \n");
+        printf("\n\t\t [0] - Volver al Menu Principal \n");
+        printf("\n\n\t\t  ");
         scanf("%d",&menu);
 
         switch(menu)
         {
         case 1:
-            showPublishPostIndividual(publish,mainArchivo,currentID);
+            showPublishPostIndividual(publishArch,mainArchivo,currentID);
             break;
         case 2:
-            showPublish(publish,mainArchivo,currentID);
+            showPublish(publishArch,mainArchivo,currentID,currentTIME);
             break;
         case 3:
-            publishPost(currentID,publish);
+            publishPost(currentID,publishArch,mainArchivo,currentTIME);
             break;
         case 4:
-            showPublishPostIndividual(publish,mainArchivo,currentID);
-            editPostMenu(idContent,publish,currentID);
+            validos=getIdPost(publishArch,mainArchivo,currentID,postArray);
+            editPostMenu(idContent,publishArch,currentID,mainArchivo,currentTIME,validos,postArray);
+            break;
+        case 5:
+            otherMenu(currentID,mainArchivo,publishArch,currentTIME);
             break;
         }
-        printf("\nEnter para continuar, ESC para salir.\n");
+        printf("\n\n  Cualquier tecla para volver, ESC para menu principal...\n");
         control=getch();
         system("cls");
     }
     while(control!=ESC);
 }
 
+///**********************************************************************************************************///
 
-///***************************************************************************///
-///***************************************************************************///
-///***************************************************************************///
-///***************************************************************************///
+int getIdPost(char publishArch[],char mainArchivo[],int currentID,stPublish postArray[])
+{
+    stPublish post;
+    stUser user;
+    int i=0;
+    FILE *pOpen =fopen(publishArch,"rb");
+    FILE *User_Arch = fopen(mainArchivo,"rb");
+    if(pOpen && User_Arch)
+    {
+        user=searchNamePOST(currentID,mainArchivo);
 
-void editUserMenu(int currentID)
+        while(fread(&post,sizeof(stPublish),1,pOpen)>0)
+        {
+            if(post.idUserContact==user.idUser)
+            {
+                if(post.active == 1)
+                {
+                    postArray[i]=post;
+                    i++;
+                }
+            }
+        }
+        fclose(pOpen);
+        fclose(User_Arch);
+    }
+    return i;
+}
+///**********************************************************************************************************///
+
+///**********************************************************************************************************///ShowPostID
+void showPostID(char publishArch[],int idPost,char mainArchivo[])
+{
+    stPublish post;
+    stUser user;
+    FILE *pOpen =fopen(publishArch,"rb");
+    FILE *User_Arch = fopen(mainArchivo,"rb");
+    if(pOpen && User_Arch)
+    {
+        fseek(pOpen,(idPost-1)*sizeof(stPublish),SEEK_SET);
+        fread(&post,sizeof(stPublish),1,pOpen);
+        user=searchNamePOST(post.idUserContact,mainArchivo);
+        if(post.idUserContact==user.idUser)
+        {
+            showPublishOne(post,user);
+        }
+
+        fclose(pOpen);
+        fclose(User_Arch);
+    }
+}
+///**********************************************************************************************************///ShowPostID
+
+///**********************************************************************************************************///
+
+///**********************************************************************************************************/// IdContentToArray
+int idPostToArray(char publishArch[],int allPostArray[])
+{
+    stPublish post;
+    int i=0;
+    FILE *pOpen =fopen(publishArch,"rb");
+    if(pOpen )
+    {
+        while(fread(&post,sizeof(stPublish),1,pOpen)>0)
+        {
+            if(post.active == 1)
+            {
+                allPostArray[i]=post.idContent;
+                i++;
+            }
+        }
+        fclose(pOpen);
+    }
+    return i;
+}
+///**********************************************************************************************************/// IdContentToArray
+
+///**********************************************************************************************************/// Random Post
+void randomPost(int validosRandom, int allPostArray[],char publishArch[],char mainArchivo[])
+{
+    srand (time(NULL));
+    stPublish post;
+    stUser user;
+    int randomArray[5];
+    int i=0;
+    int random;
+    int flag=0;
+    FILE *pOpen =fopen(publishArch,"rb");
+    FILE *User_Arch = fopen(mainArchivo,"rb");
+    if(pOpen && User_Arch)
+    {
+        printf("\n HOLA 1\n");
+        while(i<5)
+        {
+            do
+            {
+                random=allPostArray[rand()%validosRandom];
+                printf("\n HOLA 2 %d\n",random);
+                //randomArray[i]=random;
+                flag=randomValuePost(random,randomArray,validosRandom);
+            }
+            while(flag==1);
+            printf("\n HOLA 3\n");
+            showPostID(publishArch,random,mainArchivo);
+            i++;
+        }
+        fclose(pOpen);
+        fclose(User_Arch);
+    }
+
+}
+///**********************************************************************************************************///Random Post
+
+///**********************************************************************************************************///
+int randomValuePost(int random,int randomArray[],int validosRandom)
+{
+    int flag=1;
+    int i=0;
+
+    while(i<validosRandom)
+    {
+
+        if(random!=randomArray[i])
+        {
+            flag=0;
+            randomArray[i]=random;
+        }
+        i++;
+    }
+
+    return flag;
+}
+///**********************************************************************************************************///
+
+///**********************************************************************************************************///
+void otherMenu(int currentID, char mainArchivo[],char publishArch[],char currentTIME[])
+{
+    int menu,control;
+    int like;
+    int reportID =0;
+    int value;
+    int allPostArray[30];
+    int validos;
+    int validosRandom;
+    int idPost;
+    do
+    {
+        printf("\n\t Seleccione que accion quiere realizar \n\n");
+        printf("\n\t\t [1] - Ver 5 post aleatorios \n");
+        printf("\n\t\t [2] - Dar like a post \n");
+        printf("\n\t\t [3] - Comentar post \n");
+        printf("\n\t\t [4] - Feedback de post \n");
+        printf("\n\t\t [5] - Reportar post \n");
+        printf("\n\t\t [6] - Salir\n");
+        printf("\n\t\t  ");
+        scanf("%d",&menu);
+
+        switch(menu)
+        {
+        case 1:
+
+            validosRandom=idPostToArray(publishArch,allPostArray);
+            randomPost(validosRandom,allPostArray,publishArch,mainArchivo);
+            //printf("\nID POST WACHO\n");
+            // scanf("%d",&idPost);
+            // showPostID(publishArch,idPost,mainArchivo);
+            break;
+        case 2:
+            showPublish(publishArch,mainArchivo,currentID,currentTIME);
+            printf("Ingrese el post a dar me gusta\n");
+            scanf("%d",&like);
+            postLike(publishArch,like,mainArchivo,currentID);
+            break;
+        case 3:
+
+            break;
+        case 4:
+            feedbackMenu(publishArch,mainArchivo,currentID,currentTIME);
+            break;
+        case 5:
+            showPublish(publishArch,mainArchivo,currentID,currentTIME);
+            printf("\n Ingrese el ID del post a reportar\n");
+            scanf("%d",&reportID);
+            reportPost(publishArch,reportID);
+            showReport(publishArch,mainArchivo);
+            break;
+        case 6:
+            printf("\n  Saliendo... Presione ESC\n");
+            control=ESC;
+            break;
+        }
+        printf("\nEnter para continuar, ESC para salir.\n");
+        fflush(stdin);
+        control=getch();
+        system("cls");
+    }
+    while(control!=ESC);
+
+}
+///**********************************************************************************************************///
+
+///**********************************************************************************************************///
+void feedbackMenu(char publishArch[],char mainArchivo[],int currentID,char currentTIME)
+{
+    int menu,control;
+    int value;
+    do
+    {
+        printf("\n\t Seleccione que accion quiere realizar \n\n");
+        printf("\n\t\t [1] - Dar feedback \n");
+        printf("\n\t\t [2] - Ver feedbacks \n");
+        printf("\n\t\t [3] - Salir\n");
+        printf("\n\t\t  ");
+        scanf("%d",&menu);
+
+        switch(menu)
+        {
+        case 1:
+            system("cls");
+            showPublish(publishArch,mainArchivo,currentID,currentTIME);
+            printf("\n Ingrese el post a cual quiere dar un feedback\n");
+            scanf("%d",&value);
+            feedback(publishArch,currentID,mainArchivo,value);
+            break;
+        case 2:
+            system("cls");
+            showFeedback(publishArch,mainArchivo,currentTIME,currentID);
+            break;
+        case 3:
+            printf("\nEnter para continuar, ESC para salir.\n");
+            fflush(stdin);
+            control=getch();
+            system("cls");
+            break;
+        }
+    }
+    while(control!=ESC);
+}
+///**********************************************************************************************************///
+
+///**********************************************************************************************************///SHOW FEED
+void showFeedback(char publishArch[],char mainArchivo[],char currentTIME, int currentID)
+{
+    FILE *User_Arch = fopen(mainArchivo,"rb");
+    FILE *pPost = fopen(publishArch,"rb");
+    stUser user;
+    stPublish post;
+    if(User_Arch && pPost)
+    {
+
+        while(fread(&post,sizeof(stPublish),1,pPost)>0)
+        {
+
+
+            if(post.active==1 && strlen(post.feedback)>5)
+            {
+                user=searchNamePOST(post.idFeedback,mainArchivo);
+                printf("\n\t\t Feedback realizado por: %s \n",user.userName);
+                printf("\n\t\t ID del post: %d \n",post.idContent);
+                printf("\n\t\t Titulo del post: %s \n",post.title);
+                printf("\n\t\t Descripcion: %s \n",post.description);
+                printf("\n\t\t Feedback: %s \n",post.feedback);
+            }
+        }
+        fclose(User_Arch);
+        fclose(pPost);
+    }
+}
+///**********************************************************************************************************///SHOW FEED
+
+///**********************************************************************************************************/// REPORT
+void reportPost(char publishArch[],int reportID)
+{
+    stPublish post;
+    FILE *pPost = fopen(publishArch,"r+b");
+    if(pPost)
+    {
+        if(fread(&post,sizeof(stPublish),1,pPost)>0)
+        {
+            disablePost(publishArch,reportID);
+            printf("\n%d --------> REPORT\n",reportID);
+            fseek(pPost,(reportID-1)*sizeof(stPublish),SEEK_SET);
+            fread(&post,sizeof(stPublish),1,pPost);
+            printf("\nIngrese la razon por el reporte\n");
+            fflush(stdin);
+            gets(post.report);
+            printf("\n%s --------> POST REPORT\n",post.report);
+            fseek(pPost,(reportID-1)*sizeof(stPublish),SEEK_SET);
+            fwrite(&post,sizeof(stPublish),1,pPost);
+        }
+        fclose(pPost);
+    }
+}
+///**********************************************************************************************************/// REPORT
+
+///**********************************************************************************************************/// SHOW REPORT
+void showReport(char publishArch[],char mainArchivo[])
+{
+    stPublish post;
+    stUser user;
+    FILE *pPost =fopen(publishArch,"rb");
+    FILE *User_Arch = fopen(mainArchivo,"rb");
+    if(pPost && User_Arch)
+    {
+        while(fread(&post,sizeof(stPublish),1,pPost)>0)
+        {
+            if(post.active !=1 && strlen(post.report)>4)
+            {
+                showPublishOne(post,user);
+                printf("\n\t\t Razon del reporte: %s\n",post.report);
+            }
+        }
+        fclose(pPost);
+        fclose(User_Arch);
+    }
+}
+///**********************************************************************************************************///SHOW REPORT
+
+///**********************************************************************************************************/// EDICION PERFIL
+
+void editUserMenu(int currentID, char mainArchivo[])
 {
     stUser aux;
     system("cls");
     int menu,control,flag=0;
-    char newGender[40];
+    char newGender[30];
     char newPassword[30];
     char newCity[50];
     char newPlaces[150];
-    int newAge;
     char newEmail[50];
-    /// char newTopics[50];
-    /// int status;
     do
     {
-        printf("\n \t \t \t \t \t \t Editar Usuario");
-        printf("\n [1] - Cambiar password \n");
-        printf("\n [2] - Cambiar ciudad \n");
-        printf("\n [3] - Cambiar Edad \n");
-        printf("\n [4] - Cambiar E-mail\n");
-        printf("\n [5] - Cambiar Genero\n");
-        printf("\n [6] - Mostrar Usuario\n");
-        printf("\n [7] - Dar de baja la cuenta\n");
+        printf("\n\t Editar Perfil: \n\n\n");
+        printf("\n\t\t[1] - Cambiar Password \n");
+        printf("\n\t\t[2] - Cambiar Ciudad \n");
+        printf("\n\t\t[3] - Cambiar Edad \n");
+        printf("\n\t\t[4] - Cambiar E-mail\n");
+        printf("\n\t\t[5] - Cambiar Percepcion de genero\n");
+        printf("\n\t\t[6] - Mostrar Perfil\n");
+        printf("\n\t\t[7] - Dar de baja la cuenta\n");
+        printf("\n\t\t[0] - Volver al Menu Principal\n");
+        printf("\n\n\t\t  ");
 
         scanf("%d",&menu);
         switch(menu)
         {
         case 1:
-            printf("\nIngrese la nueva contraseña: \n");
+            printf("\n\t  Ingrese el nuevo Password: \n");
+            printf("\n\n\t  ");
             scanf("%s",&newPassword);
             editUserPassword(mainArchivo,currentID,newPassword);
             break;
         case 2:
-            printf("\nIngrese la nueva contraseña: \n");
+            printf("\n\t  Ingrese su nueva locacion: \n");
+            printf("\n\n\t  ");
             scanf("%s",&newCity);
             editUserCity(mainArchivo,currentID,newCity);
             break;
         case 3:
-            printf("\n Ingrese la nueva Edad: \n");
-            scanf("%d",&newAge);
-            editUserAge(mainArchivo,currentID,newAge);
+            editUserAge(mainArchivo,currentID);
+            printf("\n\t Edad editada\n");
             break;
         case 4:
             searchNamePOST(currentID,mainArchivo);
-            printf("\n Ingrese el nuevo correo electronico: \n");
+            printf("\n\t  Ingrese el nuevo correo electronico: \n");
+            printf("\n\n\t  ");
             scanf("%s",&newEmail);
             editUserEmail(mainArchivo,currentID,newEmail);
             break;
         case 5:
-            printf("\n Ingrese el nuevo genero: \n");
+            printf("\n\t  Ingrese su percepcion de genero: \n");
+            printf("\n\n\t  ");
             scanf("%s",&newGender);
             editUserGender(mainArchivo,currentID,newGender);
             break;
         case 6:
             aux=searchNamePOST(currentID,mainArchivo);
+            rankUser(mainArchivo,currentID);
             showMyUser(aux);
             break;
         case 7:
             while(control!=ESC && flag==0)
             {
-                printf("\n Esta seguro que quiere realizar la baja de la cuenta? \n");
-                printf("\n Enter para continuar ESC para cancelar\n");
+                printf("\n\t  Esta segurx que quiere darse de baja? \n\n");
+                printf("\n\t  Intro para confirmar, ESC para volver.\n");
                 fflush(stdin);
                 control=getch();
                 flag=editUserStatus(mainArchivo,currentID);
-                if(flag=1)
+                if(flag==1)
                 {
-                    return 1;
+                    exit(0);
                 }
             }
             break;
         }
-        printf("\nPresione ESC para finalizar.\n");
+        printf("\n\n  Cualquier tecla para volver, ESC para Menu Principal...\n");
         fflush(stdin);
         control=getch();
         system("cls");
@@ -522,8 +901,10 @@ void editUserMenu(int currentID)
     while(control!=ESC);
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///***************************************************************************/// EDITOR  ///REVISAR?///////////////////////////////
+///***************************************************************************/// EDITOR  ///REVISAR?///////////////////////////////
+///***************************************************************************/// EDITOR  ///REVISAR?///////////////////////////////
+///***************************************************************************/// EDITOR  ///REVISAR?///////////////////////////////
 
 void showUserOff(char archivo[]) // Perfil admin only
 {
@@ -539,12 +920,12 @@ void showUserOff(char archivo[]) // Perfil admin only
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///**********************************************************************************************************/// EDITOR PERFIL
+///*************************************************************************/// CIUDAD
 
-void editUserCity(char arch[],int currentID, char newCity[50])
+void editUserCity(char mainArchivo[],int currentID, char newCity[50])
 {
-    FILE *pArch = fopen(arch,"r+b");
+    FILE *pArch = fopen(mainArchivo,"r+b");
     stUser user;
     if(pArch)
     {
@@ -561,8 +942,7 @@ void editUserCity(char arch[],int currentID, char newCity[50])
     fclose(pArch);
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///*************************************************************************/// STATUS
 
 int editUserStatus(char arch[], int currentID)
 {
@@ -585,20 +965,19 @@ int editUserStatus(char arch[], int currentID)
     return flag;
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///*************************************************************************/// GENERO ///REVISAR
 
 void editUserGender(char arch[],int currentID, char newGender[30])
 {
     FILE *pArch = fopen(arch,"r+b");
-    stUser *user;
+    stUser user;
     if(pArch)
     {
         if(fread(&user,sizeof(stUser),1,pArch)>0)
         {
             fseek(pArch,(currentID-1)*sizeof(stUser),SEEK_SET);
             fread(&user,sizeof(stUser),1,pArch);
-            strcpy(user->gender,newGender);
+            strcpy(user.gender,newGender);
             fseek(pArch,(currentID-1)*sizeof(stUser),SEEK_SET);
             fwrite(&user,sizeof(stUser),1,pArch);
         }
@@ -606,8 +985,7 @@ void editUserGender(char arch[],int currentID, char newGender[30])
     fclose(pArch);
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///*************************************************************************/// EMAIL
 
 void editUserEmail(char arch[],int currentID, char newEmail[30])
 {
@@ -627,10 +1005,9 @@ void editUserEmail(char arch[],int currentID, char newEmail[30])
     fclose(pArch);
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///*************************************************************************/// EDAD
 
-void editUserAge(char arch[],int currentID, int newAge)
+void editUserAge(char arch[],int currentID)
 {
     FILE *pArch = fopen(arch,"r+b");
     stUser user;
@@ -640,7 +1017,7 @@ void editUserAge(char arch[],int currentID, int newAge)
         {
             fseek(pArch,(currentID-1)*sizeof(stUser),SEEK_SET);
             fread(&user,sizeof(stUser),1,pArch);
-            user.age=newAge;
+            user.age=user.age+1;
             fseek(pArch,(currentID-1)*sizeof(stUser),SEEK_SET);
             fwrite(&user,sizeof(stUser),1,pArch);
         }
@@ -648,8 +1025,7 @@ void editUserAge(char arch[],int currentID, int newAge)
     fclose(pArch);
 }
 
-///***************************************************************************///
-///***************************************************************************/// EDITOR
+///*************************************************************************/// PASSWORD
 
 void editUserPassword(char arch[],int currentID, char newPassword[30])
 {
@@ -665,47 +1041,48 @@ void editUserPassword(char arch[],int currentID, char newPassword[30])
             fseek(pArch,(currentID-1)*sizeof(stUser),SEEK_SET);
             fwrite(&user,sizeof(stUser),1,pArch);
         }
+        fclose(pArch);
     }
-    fclose(pArch);
 }
 
-///***************************************************************************///
-///***************************************************************************/// MOSTRAR USUARIO
+///**********************************************************************************************************/// MOSTRAR USER
 
-void showOneUser(stUser a)
+void showOneUser(stUser user)
 {
-    printf("\nId.......................: %d", a.idUser);
-    printf("\nUserName.................: %s", a.userName);
-    printf("\nPassword.................: %s", a.password);
-    printf("\nApellido.................: %s", a.lastName);
-    printf("\nNombre...................: %s", a.firstName);
-    printf("\nAge......................: %d", a.age);
-    printf("\nDNI......................: %d", a.dni);
-    printf("\nGenero...................: %s \n", a.gender);
-    printf("\nCiudad...................: %s\n",a.city);
-    printf("\nUser Status..............: %d\n",a.status);
+    printf("\n\t\t\t Informacion de Usuario: \n\n");
+    printf("\n\t\t\t Id.......................: %15d", user.idUser);
+    printf("\n\t\t\t Usuario..................: %15s", user.userName);
+    printf("\n\t\t\t Password.................: %15s", user.password);
+    printf("\n\t\t\t Informacion Personal.....: \n\n");
+    printf("\n\t\t\t Nombre...................: %15s",user.firstName);
+    printf("\n\t\t\t Apellido.................: %15s", user.lastName);
+    printf("\n\t\t\t Edad.....................: %15d", user.age);
+    printf("\n\t\t\t DNI......................: %15d", user.dni);
+    printf("\n\t\t\t Genero...................: %15s \n", user.gender);
+    printf("\n\t\t\t Ciudad...................: %15s\n",user.city);
+    printf("\n\t\t\t Informacion de Contacto..: \n\n");
+    printf("\n\t\t\t Correo electronico.......: %15s\n\n", user.email);
+    printf("\n\t\t\t User Status..............: %15d\n",user.status);
 }
-
-///***************************************************************************///
-///***************************************************************************///
-void showMyUser(stUser a)
+///**********************************************************************************************************/// User
+void showMyUser(stUser user)
 {
-    printf("\t\t\t******************************************************");
-    printf("\n\t\t\t***UserName.................: %10s           ***", a.userName);
-    printf("\n\t\t\t***Password.................: %10s           ***", a.password);
-    printf("\n\t\t\t***Apellido.................: %10s           ***", a.lastName);
-    printf("\n\t\t\t***Nombre...................: %10s           ***", a.firstName);
-    printf("\n\t\t\t***Age......................: %10d           ***", a.age);
-    printf("\n\t\t\t***DNI......................: %10d           ***", a.dni);
-    printf("\n\t\t\t***Genero...................: %10s           ***", a.gender);
-    // printf("\t\t\t\nCorreo electronico.......: %s\n", a.corre);
-    printf("\n\t\t\t***Ciudad...................: %10s          ***\n",a.city);
-    printf("\t\t\t******************************************************");
+    printf("\t\t\t------------------------------------------------------------------\n");
+    printf("\n\t\t\t***  Usuario.............. : %25s         ***\n", user.userName);
+    printf("\n\t\t\t***  Password............. : %25s         ***\n", user.password);
+    printf("\n\t\t\t***  Nombre............... : %25s         ***\n", user.firstName);
+    printf("\n\t\t\t***  Apellido............. : %25s         ***\n", user.lastName);
+    printf("\n\t\t\t***  Edad................. : %25d         ***\n", user.age);
+    printf("\n\t\t\t***  DNI.................. : %25d         ***\n", user.dni);
+    printf("\n\t\t\t***  Genero............... : %25s         ***\n", user.gender);
+    printf("\n\t\t\t***  Ciudad............... : %25s         ***\n", user.city);
+    printf("\n\t\t\t***  Email................ : %25s         ***\n", user.email);
+    printf("\n\t\t\t***  Ranking.............. : %25s         ***\n", user.ranki);
+    printf("\n\t\t\t***  Nivel................ : %25d         ***\n", user.level);
+    printf("\n\t\t\t***  Puntos............... : %25d         ***\n", user.points);
+    printf("\n\t\t\t------------------------------------------------------------------");
 }
-
-///***************************************************************************///
-///***************************************************************************/// MOSTRAR USUARIO
-
+///**********************************************************************************************************/// User
 void showUser(char archivo[])
 {
     FILE *User_Arch = fopen(archivo, "rb");
@@ -720,10 +1097,30 @@ void showUser(char archivo[])
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
+///**********************************************************************************************************/// FEEDBACK
+void feedback(char publishArch[],int currentID, char mainArchivo[], int value)
+{
+    FILE *pPost = fopen(publishArch,"r+b");
+    stPublish post;
+    if(fread(&post,sizeof(stPublish),1,pPost)>0)
+    {
+        fseek(pPost,(value-1)*sizeof(stPublish),SEEK_SET);
+        fread(&post,sizeof(stPublish),1,pPost);
+        printf("\nIngrese su feedback\n");
+        fflush(stdin);
+        gets(post.feedback);
+        post.idFeedback=currentID;
+        points(mainArchivo,currentID);
+        fseek(pPost,(value-1)*sizeof(stPublish),SEEK_SET);
+        fwrite(&post,sizeof(stPublish),1,pPost);
+    }
+    fclose(pPost);
 
-int publishPost(int currentID,char publish [])
+}
+///**********************************************************************************************************/// FEEDBACK
+///**********************************************************************************************************/// PUBLICAR
+
+int publishPost(int currentID,char publish [],char mainArchivo[],char currenTime[])
 {
     int postStatus=0;
     int idContent=lastIDPost(publish);
@@ -735,18 +1132,32 @@ int publishPost(int currentID,char publish [])
     FILE * pPost = fopen(publish,"ab");
     if(pPost)
     {
-        printf("\n Ingrese el titulo de la publicacion \n");
+        strcpy(post.currentTIME,currenTime);
+        printf("\n\t\t  Ingrese cabecera del post: \n");
+        printf("\n\n\t\t  ");
         fflush(stdin);
         gets(post.title);
 
-        printf("\n Ingrese una breve descripcion suya.\n");
+        printf("\n\t\t   Ingrese una breve descripcion de su persona: \n");
+        printf("\n\n\t\t  ");
         fflush(stdin);
         gets(post.description);
 
-        printf("\n Ingrese el precio\n");
+        printf("\n\t\t   Ingrese el valor requerido: \n");
+        printf("\n\n\t\t  ");
         scanf("%d",&post.cost);
 
-        printf("\nSeleccione un lugar de reunion\n");
+        printf("\n\t\t   Ingrese el horario a reunirse: \n");
+        printf("\n\n\t\t  ");
+        fflush(stdin);
+        gets(post.time);
+
+        printf("\n\t\t   Ingrese tematica a charlar: \n");
+        printf("\n\n\t\t  ");
+        fflush(stdin);
+        gets(post.categoria);
+
+        printf("\n\t\t   Seleccione el lugar preferido para la reunion: \n");
         selectPlace(publish,&post);
 
         user=searchNamePOST(currentID,mainArchivo);
@@ -756,56 +1167,57 @@ int publishPost(int currentID,char publish [])
         post.idUserContact=user.idUser;
         post.active=1;
         postStatus=1;
+        points(mainArchivo,currentID);
+        post.likes=0;
         fwrite(&post,sizeof(stPublish),1,pPost);
-        fclose(pPost);
+
     }
+    fclose(pPost);
     statusPublisPost(postStatus);
     return postStatus;
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
+///*************************************************************************/// CONFIRMACION POST
 
 void statusPublisPost (int postStatus)
 {
     if (postStatus==1)
     {
-        printf("\n La publicacion se cargo con exito");
+        printf("\n\t\t El post se ha publicado exitosamente!\n\n");
     }
     else
     {
-        printf("\n La publicacion tuvo problemas para poder se cargada.");
+        printf("\n\t\t El post no pudo publicarse, intente nuevamente...\n\n");
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
+///*************************************************************************/// LOCALIZACION
 
 void selectPlace(char publish[],stPublish post)
 {
     FILE * pPublish = fopen(publish,"ab");
     int menu;
-    printf("\nSeleccione el lugar: \n");
-    printf("\n [1] - La Fonte D´Oro || Colon y Buenos Aires Buenos Aires 2098 \n");
-    printf("\n [2] - La Fonte D´Oro || Constitucion y Av. Tejedor \n");
-    printf("\n [3] - La Fonte D´Oro || Luro y 180 \n");
-    printf("\n [4] - La Fonte D´Oro || Urquiza y la Costa \n");
-    printf("\n [5] - Café Martínez  || Av. Colón 3651 · 7 a 22 \n");
-    printf("\n [6] - Di Mero Espresso Cafeteria || Martin Miguel de Guemes 2483 - 7 a 20 \n");
-    printf("\n [7] - ADORADO Cafe & Bar || Paseo Aldrey Shopping 8- 20:30 \n");
-    printf("\n [8] - De Postres || Carlos Alvear 2889 \n");
-    printf("\n [9] - Croissant Cafe || Cordoba 2361 \n");
-    printf("\n [10]-Adorado Cafe || Av. Independencia 2546 \n");
+    printf("\n\n\n\t  Seleccione un sitio: \n\n");
+    printf("\n [1]  - La Fonte D´Oro || Colon y Buenos Aires \n");
+    printf("\n [2]  - La Fonte D´Oro || Constitucion y Tejedor \n");
+    printf("\n [3]  - La Fonte D´Oro || Luro y 180 \n");
+    printf("\n [4]  - La Fonte D´Oro || Urquiza y la Costa \n");
+    printf("\n [5]  - Cafe Martinez  || Colon 3651 - 7 a 22 \n");
+    printf("\n [6]  - Di Mero Espresso Cafeteria || Martin Miguel de Guemes 2483 - 7 a 20 \n");
+    printf("\n [7]  - ADORADO Cafe & Bar || Paseo Aldrey - 8 a 20 \n");
+    printf("\n [8]  - De Postres || Carlos Alvear 2889 \n");
+    printf("\n [9]  - Croissant Cafe || Cordoba 2361 \n");
+    printf("\n [10] - Adorado Cafe || Independencia 2546 \n");
     do
     {
         scanf("%d",&menu);
         switch(menu)
         {
         case 1:
-            strcpy(post.places,"La Fonte D´Oro- Colón y Buenos Aires Buenos Aires 2098");
+            strcpy(post.places,"La Fonte D´Oro - Colon y Buenos Aires");
             break;
         case 2:
-            strcpy(post.places,"La Fonte D´Oro - Constitucion y Av. Tejedor");
+            strcpy(post.places,"La Fonte D´Oro - Constitucion y Tejedor");
             break;
         case 3:
             strcpy(post.places,"La Fonte D´Oro - Luro y 180");
@@ -814,13 +1226,13 @@ void selectPlace(char publish[],stPublish post)
             strcpy(post.places,"La Fonte D´Oro - Urquiza y la Costa");
             break;
         case 5:
-            strcpy(post.places,"Cafe Martinez  - Av. Colón 3651 · 7 a 22");
+            strcpy(post.places,"Cafe Martinez - Colon 3651 - 7 a 22");
             break;
         case 6:
             strcpy(post.places,"Di Mero Espresso Cafeteria - Martin Miguel de Guemes 2483 - 7 a 20");
             break;
         case 7:
-            strcpy(post.places,"ADORADO Cafe & Bar - Paseo Aldrey Shopping 8- 20:30");
+            strcpy(post.places,"ADORADO Cafe & Bar - Paseo Aldrey - 8 a 20");
             break;
         case 8:
             strcpy(post.places,"De Postres - Carlos Alvear 2889");
@@ -829,21 +1241,43 @@ void selectPlace(char publish[],stPublish post)
             strcpy(post.places,"Croissant Cafe - Cordoba 2361");
             break;
         case 10:
-            strcpy(post.places,"Adorado Cafe - Av. Independencia 2546");
+            strcpy(post.places,"Adorado Cafe - Independencia 2546");
             break;
         }
         if(menu>0 && menu>=11)
         {
-            printf("\nLa opcion ingresada es inconrrecta, vuelva a ingresar.\n");
+            printf("\n  La opcion ingresada no se encuentra, intente nuevamente...\n");
         }
     }
     while(menu>0 && menu>=11);
-    fwrite(&post,sizeof(stPublish),1,pPublish);
+    fwrite(&post,sizeof(stPublish),0,pPublish);
     fclose(pPublish);
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
+///*************************************************************************/// PREVISUALIZACION POST
+void showPublishOne(stPublish post, stUser user)
+{
+    printf("\n\t\t **************************************************************************************\n");
+    printf("\n\t\t *****----------------------------------------------------------------------------*****\n");
+    printf("\n\t\t El post se publico: %s\n",post.currentTIME);
+    printf("\n\t\t\t\t\t\t\t\t\t\t\t  %s\n",user.userName);
+    printf("\n\t\t ID post: %d\n", post.idContent);
+    printf("\n\t\t\t\t\t\t\t %s \n",post.title);
+    printf("\n\t\t--------------------------------------------------------------------------------------------");
+    printf("\n\t\t Descripcion: %s \n", post.description);
+    printf("\n\t\t--------------------------------------------------------------------------------------------");
+    printf("\n\t\t Las tematicas a tratar seran: %s \n",post.categoria);
+    printf("\n\t\t--------------------------------------------------------------------------------------------");
+    printf("\n\t\t Localizacion : %s \n",post.places);
+    printf("\n\t\t--------------------------------------------------------------------------------------------");
+    printf("\n\t\t El horario de la reunion sera: %s",post.time);
+    printf("\n \t\t Likes de la publicacion: %d",post.likes);
+    printf("\n\t\t\t\t\t\t\t\t\t\t  El valor es: $%d\n",post.cost);
+    printf("\n\t\t *****----------------------------------------------------------------------------*****\n");
+    printf("\n\t\t **************************************************************************************\n");
+}
+///*************************************************************************/// PREVISUALIZACION POST
+///*************************************************************************/// PREVISUALIZACION POST
 
 void showPublishPostIndividual(char publish[],char mainArchivo[],int currentID)
 {
@@ -861,16 +1295,7 @@ void showPublishPostIndividual(char publish[],char mainArchivo[],int currentID)
             {
                 if(post.active == 1)
                 {
-                    printf("\n \t \t **************************************************************************************\n");
-                    printf("\n \t \t *****----------------------------------------------------------------------------*****\n");
-                    printf("\n \t \t \t \t \t \t \t \t \t \t \t  %s\n",user.userName);
-                    printf("\n \t \t ID post: %d\n", post.idContent);
-                    printf("\n \t \t \t %s \n",post.title);
-                    printf("\n \t \t  %s \n", post.description);
-                    printf("\n \t \t Localizacion : %s \n",post.places);
-                    printf("\n \t \t \t \t \t \t \t \t \t \t  El precio es :%d\n",post.cost);
-                    printf("\n \t \t *****----------------------------------------------------------------------------*****\n");
-                    printf("\n \t \t **************************************************************************************\n");
+                    showPublishOne(post,user);
                 }
             }
         }
@@ -879,9 +1304,10 @@ void showPublishPostIndividual(char publish[],char mainArchivo[],int currentID)
     }
 }
 
-///***************************************************************************///
-///***************************************************************************///
-void showPublish(char publish[],char mainArchivo[],int currentID)
+///*************************************************************************/// PREVISUALIZACION POST (MISMA FUNCION????)
+
+
+void showPublish(char publish[],char mainArchivo[],int currentID,char currentTIME[])
 {
     stPublish post;
     stUser user;
@@ -889,30 +1315,98 @@ void showPublish(char publish[],char mainArchivo[],int currentID)
     FILE *User_Arch = fopen(mainArchivo,"rb");
     if(pOpen && User_Arch)
     {
-            while(fread(&post,sizeof(stPublish),1,pOpen)>0)
+        while(fread(&post,sizeof(stPublish),1,pOpen)>0)
+        {
+            user=searchNamePOST(post.idUserContact,mainArchivo);
+            if(post.active == 1)
             {
-                user=searchNamePOST(post.idUserContact,mainArchivo);
-                if(post.active == 1)
-                {
-                    printf("\n \t \t **************************************************************************************\n");
-                    printf("\n \t \t *****----------------------------------------------------------------------------*****\n");
-                    printf("\n \t \t \t \t \t \t \t \t \t \t \t  %s\n",user.userName);
-                    printf("\n \t \t ID post: %d\n", post.idContent);
-                    printf("\n \t \t \t %s \n",post.title);
-                    printf("\n \t \t  %s \n", post.description);
-                    printf("\n \t \t Localizacion : %s \n",post.places);
-                    printf("\n \t \t \t \t \t \t \t \t \t \t  El precio es :%d\n",post.cost);
-                    printf("\n \t \t *****----------------------------------------------------------------------------*****\n");
-                    printf("\n \t \t **************************************************************************************\n");
-                }
+                showPublishOne(post,user);
             }
+        }
         fclose(pOpen);
         fclose(User_Arch);
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// ID DE LA PUBLCIACIÓN
+///*************************************************************************/// POST LIKE
+void postLike(char publishArch[],int like,char mainArchivo[],int currentID)
+{
+    FILE *pPost = fopen(publishArch,"r+b");
+    stPublish post;
+    if(pPost)
+    {
+        if(fread(&post,sizeof(stPublish),1,pPost)>0)
+        {
+            fseek(pPost,(like-1)*sizeof(stPublish),SEEK_SET);
+            fread(&post,sizeof(stPublish),1,pPost);
+            post.likes=post.likes+1;
+            points(mainArchivo,currentID);
+            fseek(pPost,(like-1)*sizeof(stPublish),SEEK_SET);
+            fwrite(&post,sizeof(stPublish),1,pPost);
+        }
+        fclose(pPost);
+    }
+}
+
+///*************************************************************************/// POST LIKE
+
+///*************************************************************************/// POINTS
+void points(char mainArchivo[],int currentID)
+{
+    FILE *User_Arch = fopen(mainArchivo,"r+b");
+    stUser user;
+    if(User_Arch)
+    {
+        if(fread(&user,sizeof(stUser),1,User_Arch)>0)
+        {
+            fseek(User_Arch,(currentID-1)*sizeof(stUser),SEEK_SET);
+            fread(&user,sizeof(stUser),1,User_Arch);
+            user.points=user.points+1;
+            fseek(User_Arch,(currentID-1)*sizeof(stUser),SEEK_SET);
+            fwrite(&user,sizeof(stUser),1,User_Arch);
+        }
+        fclose(User_Arch);
+    }
+}
+///*************************************************************************/// POINTS
+
+///*************************************************************************/// RANK USER
+void rankUser(char mainArchivo[],int currentID)
+{
+    FILE *User_Arch = fopen(mainArchivo,"r+b");
+    stUser user;
+    if(User_Arch)
+    {
+        fseek(User_Arch,(currentID-1)*sizeof(stUser),SEEK_SET);
+        fread(&user,sizeof(stUser),1,User_Arch);
+        if(user.points<10)
+        {
+            strcpy(user.ranki,"Bronce");
+            user.level=0;
+        }
+        else if(user.points>10 && user.points<20)
+        {
+            strcpy(user.ranki,"Plata");
+            user.level=1;
+        }
+        else if(user.points>20 && user.points<30)
+        {
+            strcpy(user.ranki,"Oro");
+            user.level=2;
+        }
+        else
+        {
+            strcpy(user.ranki,"Diamante");
+            user.level=3;
+        }
+        fseek(User_Arch,(currentID-1)*sizeof(stUser),SEEK_SET);
+        fwrite(&user,sizeof(stUser),1,User_Arch);
+    }
+    fclose(User_Arch);
+}
+///*************************************************************************/// RANK USER
+
+///*************************************************************************/// ID POST
 
 int lastIDPost(char publish[])
 {
@@ -932,12 +1426,10 @@ int lastIDPost(char publish[])
     return lastIdPost;
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
+///**********************************************************************************************************/// MENU EDITAR PUBLICACION
 
-void editPostMenu(int idContent, char publish[], int currentID)
+void editPostMenu(int idContent, char publishArch[], int currentID, char mainArchivo[],char currentTIME,int validos,int postArray[])
 {
-    FILE *pPost = fopen(publish,"r+b");
     stPublish post;
     stUser user;
     int value=0;
@@ -949,67 +1441,288 @@ void editPostMenu(int idContent, char publish[], int currentID)
     char categoria[30];
     int active;
     int newCost;
-    int newTime;
+    int newTime[20];
     char newPlaces[100];
+    char newTopics[30];
+    int flag=0;
 
     do
     {
-        printf("\n\t Seleccione una opcion \n");
-        printf("\n\t [1] - Editar Titulo \n");
-        printf("\n\t [2] - Editar Descripcion \n");
-        printf("\n\t [3] - Editar Categoria \n"); ///FALTA
-        printf("\n\t [4] - Editar Precio \n");
-        printf("\n\t [5] - Editar tiempo \n");///FALTA
-        printf("\n\t [6] - Editar lugar \n");///FALTA
-        printf("\n\t [7] - Dar de baja una publicacion \n");
+        showPublishPostIndividual(publishArch,mainArchivo,currentID);
+        printf("\n\t Seleccione una accion: \n\n");
+        printf("\n\t\t[1] - Editar Titulo \n");
+        printf("\n\t\t[2] - Editar Descripcion \n");
+        printf("\n\t\t[3] - Editar Categoria \n");
+        printf("\n\t\t[4] - Editar Valor \n");
+        printf("\n\t\t[5] - Editar Horario \n");
+        printf("\n\t\t[6] - Editar Lugar \n");
+        printf("\n\t\t[7] - Dar de baja una publicacion \n");
+        printf("\n\t\t[0] - Volver al Menu Principal \n");
+        printf("\n\t\t  ");
+
         scanf("%d",&menu);
 
         switch(menu)
         {
         case 1:
-            printf("\n Ingrese el ID del post que quiere editar \n");
-            scanf("%d",&value);
-            printf("\n Ingrese el nuevo titulo\n");
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            printf("\n  Ingrese el nuevo titulo: \n");
             fflush(stdin);
             gets(newTitle);
-            editPostTitle(publish,value,newTitle);
+            editPostTitle(publishArch,value,newTitle);
             break;
         case 2:
-            printf("\n Ingrese el ID del post que quiere editar \n");
-            scanf("%d",&value);
-            printf("\n Ingrese la nueva descripcion\n");
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            printf("\n  Ingrese la nueva descripcion: \n");
             fflush(stdin);
             gets(newDescription);
-            editPostDescription(publish,value,newDescription);
+            editPostDescription(publishArch,value,newDescription);
             break;
         case 3:
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            printf("\n  Ingrese los nuevos topicos a hablar: \n");
+            fflush(stdin);
+            gets(newTopics);
+            editPostTopics(publishArch,value,newTopics);
             break;
         case 4:
-            printf("\n Ingrese el ID del post que quiere editar \n");
-            scanf("%d",&value);
-            printf("\n Ingrese el nuevo precio \n");
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            printf("\n  Ingrese el nuevo valor: \n");
             scanf("%d",&newCost);
-            editPostCost(publish,value,newCost);
+            editPostCost(publishArch,value,newCost);
             break;
         case 5:
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            printf("\n  Ingrese el nuevo horario: \n");
+            fflush(stdin);
+            gets(newTime);
+            editPostTime(publishArch,value,newTime);
             break;
         case 6:
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            editSelectPlace(publishArch,post,value);
             break;
         case 7:
-            printf("\n Ingrese el ID del post que quiere editar \n");
-            scanf("%d",&value);
-            disablePost(publish,value);
+            do
+            {
+                printf("\n Ingrese la ID del post a modificar: \n");
+                fflush(stdin);
+                scanf("%d",&value);
+                flag=rightPost(validos,postArray,value);
+                if(flag==0)
+                {
+                    printf("\n Ingrese un ID de post correcto\n");
+                }
+            }
+            while(flag==0);
+            disablePost(publishArch,value);
             break;
         }
-        printf("\nEnter para continuar, ESC para salir.\n");
+        printf("\n\n  Cualquier tecla para volver, ESC para Menu Principal...\n");
+        fflush(stdin);
         control=getch();
         system("cls");
     }
     while(control!=ESC);
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
+///*************************************************************************/// EDITAR LOCALIZACION
+///*************************************************************************/// Right POST
+int rightPost(int validos,int postArray[], int value)
+{
+    stPublish post;
+    int i=0;
+    int flag=0;
+
+    while(i<validos && flag==0)
+    {
+        if(value==postArray[i])
+        {
+            flag=1;
+        }
+        i++;
+    }
+    return flag;
+}
+///*************************************************************************/// Right POST
+
+///*************************************************************************///
+
+///*************************************************************************///
+///*************************************************************************/// EDITAR LOCALIZACION
+
+
+void editSelectPlace(char publish[],stPublish post, int value)
+{
+    FILE * pPublish = fopen(publish,"r+b");
+    int menu;
+    printf("\n\t  Seleccione un sitio: \n\n");
+    printf("\n [1]  - La Fonte D´Oro || Colon y Buenos Aires \n");
+    printf("\n [2]  - La Fonte D´Oro || Constitucion y Tejedor \n");
+    printf("\n [3]  - La Fonte D´Oro || Luro y 180 \n");
+    printf("\n [4]  - La Fonte D´Oro || Urquiza y la Costa \n");
+    printf("\n [5]  - Cafe Martinez  || Colon 3651 - 7 a 22 \n");
+    printf("\n [6]  - Di Mero Espresso Cafeteria || Martin Miguel de Guemes 2483 - 7 a 20 \n");
+    printf("\n [7]  - ADORADO Cafe & Bar || Paseo Aldrey - 8 a 20 \n");
+    printf("\n [8]  - De Postres || Carlos Alvear 2889 \n");
+    printf("\n [9]  - Croissant Cafe || Cordoba 2361 \n");
+    printf("\n [10] - Adorado Cafe || Independencia 2546 \n");
+    fseek(pPublish,(value-1)*sizeof(stPublish),SEEK_SET);
+    fread(&post,sizeof(stPublish),1,pPublish);
+    do
+    {
+        scanf("%d",&menu);
+        switch(menu)
+        {
+        case 1:
+            strcpy(post.places,"La Fonte D´Oro - Colon y Buenos Aires");
+            break;
+        case 2:
+            strcpy(post.places,"La Fonte D´Oro - Constitucion y Tejedor");
+            break;
+        case 3:
+            strcpy(post.places,"La Fonte D´Oro - Luro y 180");
+            break;
+        case 4:
+            strcpy(post.places,"La Fonte D´Oro - Urquiza y la Costa");
+            break;
+        case 5:
+            strcpy(post.places,"Cafe Martinez - Colon 3651 - 7 a 22");
+            break;
+        case 6:
+            strcpy(post.places,"Di Mero Espresso Cafeteria - Martin Miguel de Guemes 2483 - 7 a 20");
+            break;
+        case 7:
+            strcpy(post.places,"ADORADO Cafe & Bar - Paseo Aldrey - 8 a 20");
+            break;
+        case 8:
+            strcpy(post.places,"De Postres - Carlos Alvear 2889");
+            break;
+        case 9:
+            strcpy(post.places,"Croissant Cafe - Cordoba 2361");
+            break;
+        case 10:
+            strcpy(post.places,"Adorado Cafe - Independencia 2546");
+            break;
+        }
+        if(menu>0 && menu>=11)
+        {
+            printf("\n  La opcion ingresada no se encuentra, intente nuevamente...\n");
+        }
+    }
+    while(menu>0 && menu>=11);
+    fseek(pPublish,(value-1)*sizeof(stPublish),SEEK_SET);
+    fwrite(&post,sizeof(stPublish),1,pPublish);
+    fclose(pPublish);
+}
+
+///*************************************************************************/// EDITAR TOPICOS
+
+void editPostTopics(char publish[],int value,char newTopics[30])
+{
+    FILE *pArch = fopen(publish,"r+b");
+    stPublish post;
+    if(pArch)
+    {
+        if(fread(&post,sizeof(stPublish),1,pArch)>0)
+        {
+            fseek(pArch,(value-1)*sizeof(stPublish),SEEK_SET);
+            fread(&post,sizeof(stPublish),1,pArch);
+            strcpy(post.categoria,newTopics);
+            fseek(pArch,(value-1)*sizeof(stPublish),SEEK_SET);
+            fwrite(&post,sizeof(stPublish),1,pArch);
+        }
+    }
+    fclose(pArch);
+}
+
+///*************************************************************************/// EDITAR HORARIO
+
+void editPostTime(char publish[],int value,int newTime)
+{
+    FILE *pArch = fopen(publish,"r+b");
+    stPublish post;
+    if(pArch)
+    {
+        if(fread(&post,sizeof(stPublish),1,pArch)>0)
+        {
+            fseek(pArch,(value-1)*sizeof(stPublish),SEEK_SET);
+            fread(&post,sizeof(stPublish),1,pArch);
+            strcpy(post.time,newTime);
+            fseek(pArch,(value-1)*sizeof(stPublish),SEEK_SET);
+            fwrite(&post,sizeof(stPublish),1,pArch);
+        }
+    }
+    fclose(pArch);
+}
+
+///*************************************************************************/// BAJA PUBLICACION
 
 void disablePost(char publish[], int value)
 {
@@ -1022,17 +1735,16 @@ void disablePost(char publish[], int value)
             fseek(pPost,(value-1)*sizeof(stPublish),SEEK_SET);
             fread(&post,sizeof(stPublish),1,pPost);
             post.active=0;
+            strcpy(post.report,"Baja");
             fseek(pPost,(value-1)*sizeof(stPublish),SEEK_SET);
-            fwrite(&post,sizeof(stUser),1,pPost);
+            fwrite(&post,sizeof(stPublish),1,pPost);
         }
         fclose(pPost);
     }
 }
 
-///***************************************************************************///
-///***************************************************************************/// PUBLICAR
-///***************************************************************************///Edit Title post
-///***************************************************************************///
+///*************************************************************************/// EDITAR TITULO
+
 void editPostTitle(char publish[],int value,char newTitle[30])
 {
     FILE *pArch = fopen(publish,"r+b");
@@ -1047,12 +1759,12 @@ void editPostTitle(char publish[],int value,char newTitle[30])
             fseek(pArch,(value-1)*sizeof(stPublish),SEEK_SET);
             fwrite(&post,sizeof(stPublish),1,pArch);
         }
+        fclose(pArch);
     }
-    fclose(pArch);
 }
-///***************************************************************************///
-///***************************************************************************///Edit title post
-///***************************************************************************///
+
+///*************************************************************************/// EDITAR VALOR
+
 void editPostCost(char publish[],int value, int newCost)
 {
     {
@@ -1072,9 +1784,9 @@ void editPostCost(char publish[],int value, int newCost)
         fclose(pArch);
     }
 }
-///***************************************************************************///
-///***************************************************************************///Edit
-///***************************************************************************///
+
+///*************************************************************************/// EDITAR DESCRIPCION
+
 void editPostDescription(char publish[],int value,char newDescription[300])
 {
     FILE *pArch = fopen(publish,"r+b");
@@ -1112,7 +1824,7 @@ void searchMyPost(char publish[],char mainArchivo[],int currentID)
 
         while(fread(&post,sizeof(stPublish),1,pOpen)>0)
         {
-            if(post.idUserContact==user.idUser)///user.idUser==post.idContent &&///
+            if(post.idUserContact==user.idUser)
             {
                 printf("\n \t \t **************************************************************************************\n");
                 printf("\n \t \t *****----------------------------------------------------------------------------*****\n");
@@ -1120,8 +1832,8 @@ void searchMyPost(char publish[],char mainArchivo[],int currentID)
                 printf("\n \t \t ID post: %d\n", post.idContent);
                 printf("\n \t \t \t %s \n",post.title);
                 printf("\n \t \t  %s \n", post.description);
-                printf("\n \t \t Localizacion : %s \n",post.places);
-                printf("\n \t \t \t \t \t \t \t \t \t \t  El precio es :%d\n",post.cost);
+                printf("\n \t \t Localizacion: %s \n",post.places);
+                printf("\n \t \t \t \t \t \t \t \t \t \t  El valor es: $%d\n",post.cost);
                 printf("\n \t \t *****----------------------------------------------------------------------------*****\n");
                 printf("\n \t \t **************************************************************************************\n");
             }
@@ -1134,24 +1846,8 @@ void searchMyPost(char publish[],char mainArchivo[],int currentID)
 ///***************************************************************************///
 ///***************************************************************************/// PUBLICAR
 
-//int searchNamePOST(int currentID, char mainArchivo[], char *userNamePost[20])
-//{
-//    FILE *User_Arch=fopen(mainArchivo,"rb");
-//    stUser user;
-//    int i=0;
-//    if(User_Arch!=NULL)
-//    {
-//       /// printf("%s",userNamePost);
-//        fseek(User_Arch,(currentID-1)*sizeof(stUser),SEEK_CUR);
-//        fread(&user,sizeof(stUser),1,User_Arch);
-//        if (user.idUser==currentID)
-//            {i=strcpy(&userNamePost,user.userName);}
-//            else{printf("\n nose encontro");}
-//        printf("%d",&userNamePost);
-//        fclose(User_Arch);
-//    }
-//    return i;
-//}
+///***************************************************************************///
+///***************************************************************************///  BUSCADOR DE USARIO
 
 ///***************************************************************************///
 ///***************************************************************************///  BUSCADOR DE USARIO
@@ -1175,13 +1871,18 @@ stUser searchNamePOST(int currentID, char mainArchivo[])
     return user;
 }
 
-///***************************************************************************///
-///***************************************************************************///  MENSAJERIA
-
-void messengeMenu(int currentID)
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+///**************************************          Mensajeria                         ********************************************///
+///*******************************************************************************************************************************///
+///*******************************************************************************************************************************///
+void messengeMenu(int currentID, char mainArchivo[], char messangerUsuarios[], char timeSend[])
 {
     stUser user;
     stPublish post;
+    int flag=0;
+    int op=0;
     user=searchNamePOST(currentID,mainArchivo);
     int menu;
     do
@@ -1197,14 +1898,27 @@ void messengeMenu(int currentID)
         switch(menu)
         {
         case 1:
-            viewMesengges (currentID,messangerUsuarios,mainArchivo);
 
+            flag=viewInboxMessagerOk(user,mainArchivo,messangerUsuarios);
+            system("cls");
+            if(flag==1)
+            {
+                printf("\nTienes mensajes pendientes\n 1 - VER \n 2 -Salir \n");
+                fflush(stdin);
+                scanf("%d",&op);
+                if (op==1)
+                    inboxMessenger(user,currentID,messangerUsuarios,mainArchivo,timeSend);
+            }
+            else
+            {
+                printf("\nNo tienes mensajes nuevos");
+            }
             break;
         case 2:
-            sendMesengges (currentID,messangerUsuarios,mainArchivo);
+            sendMesengges (currentID,messangerUsuarios,mainArchivo,timeSend);
             break;
         case 3:
-            viewMesenggesSend(currentID,messangerUsuarios,mainArchivo);
+            viewMesenggesSend(user,messangerUsuarios,mainArchivo);
             break;
         case 4:
             printf("\nVuelve cuando quieras");
@@ -1222,75 +1936,42 @@ void messengeMenu(int currentID)
 ///***************************************************************************///
 ///***************************************************************************///  MENSAJERIA
 
-void viewMesengges (int currentID,char messangerUsuarios[], char mainArchivo[])
-{
-    stMessenge sms;
-    stUser user, userSearchSend;
-
-    FILE * User_Archi = fopen(mainArchivo,"rb");
-    FILE * mSn = fopen(messangerUsuarios,"r+b");
-    if (User_Archi && mSn)
-    {
-        user=searchNamePOST(currentID,mainArchivo);
-        while(fread(&sms,sizeof(stMessenge),1,mSn)>0)
-        {
-            userSearchSend=searchNamePOST(sms.idIssuing,mainArchivo);
-
-            if(user.idUser==sms.idReceiver)
-            {
-                printf("\n**************** Enviado de %s \n", userSearchSend.userName);
-                printf("\n---> %s \n", sms.message);
-                //printf("\n---> %d \n", sms.read);
-               // sms.read=1;
-                // printf("\n---> %d \n", sms.read);
-                //printf("\n---> %d \n", sms.read);
-                //fwrite(&sms,sizeof(stMessenge),1,mSn);
-            }
-        }
-        fclose(User_Archi);
-        fclose(mSn);
-    }
-}
-
-///
-
 ///***************************************************************************///
 ///***************************************************************************///  MENSAJERIA
 
-void sendMesengges (int currentID, char messangerUsuarios[], char mainArchivo[])
+void sendMesengges (int currentID, char messangerUsuarios[], char mainArchivo[],char timeSend[])
 {
     stMessenge sms;
     stUser user,userSearch;
     int idMessenge = lastIDsms(messangerUsuarios);
     char name[20];
 
-    FILE * User_Archi = fopen(mainArchivo,"rb");
-    if(User_Archi)
+    FILE * mSn = fopen(messangerUsuarios,"ab");
+    if(mSn)
     {
         user=searchNamePOST(currentID,mainArchivo);
-
+        displayUsersName(mainArchivo,currentID);
         printf("\n Ingrese a que usuario desea enviar mensaje\n");
         fflush(stdin);
         gets(name);
 
         userSearch=searchUserMessenge(name,mainArchivo);
 
-        FILE * mSn = fopen(messangerUsuarios,"ab");
-        if(mSn)
-        {
-            printf("\nEscriba el mensaje a %s \n", userSearch.userName);
-            fflush(stdin);
-            gets(sms.message);
-            idMessenge++;
-            sms.idContent=idMessenge;
-            sms.idReceiver=userSearch.idUser; /// RECIBE
-            sms.idIssuing=user.idUser;        /// ENVIA
-            sms.read=0;
-            printf("\n------------%d",sms.read);
-            fwrite(&sms,sizeof(stMessenge),1,mSn);
-            fclose(mSn);
-        }
-        fclose(User_Archi);
+        printf("\nEscriba el mensaje al usuario %s, nombre %s \n", userSearch.userName,userSearch.firstName);
+        fflush(stdin);
+        gets(sms.message);
+        idMessenge++;
+        strcpy(sms.timeSend,timeSend);  ///TIME
+        sms.idContent=idMessenge;
+        sms.idReceiver=userSearch.idUser;  /// RECIBE
+        sms.idIssuing=user.idUser;   /// ENVIA
+        sms.read=0;
+
+        fwrite(&sms,sizeof(stMessenge),1,mSn);
+        points(mainArchivo,currentID);
+        printf("\n------------idRecibe%d",sms.idReceiver);
+        printf("\n------------idEnvia%d",sms.idIssuing);
+        fclose(mSn);
     }
 }
 
@@ -1321,7 +2002,7 @@ stUser searchUserMessenge(char name[],char mainArchivo[])
 
 int lastIDsms (char messangerUsuarios[])
 {
-    FILE *mSn =fopen(messangerUsuarios,"rb");
+    FILE *mSn =fopen(messangerUsuarios,"r+b");
     stMessenge sms;
     int lastIdPost=0;
 
@@ -1340,26 +2021,345 @@ int lastIDsms (char messangerUsuarios[])
 ///***************************************************************************///
 ///***************************************************************************///  MENSAJERIA
 
-void viewMesenggesSend (int currentID,char messangerUsuarios[], char mainArchivo[])
+void viewMesenggesSend (stUser user,char messangerUsuarios[], char mainArchivo[])
 {
     stMessenge sms;
-    stUser user, userSearchSend;
+    stUser userSearchSend;
 
     FILE * User_Archi = fopen(mainArchivo,"rb");
     FILE * mSn = fopen(messangerUsuarios,"rb");
     if (User_Archi && mSn)
     {
-        user=searchNamePOST(currentID,mainArchivo);
         while(fread(&sms,sizeof(stMessenge),1,mSn)>0)
         {
-            userSearchSend=searchNamePOST(sms.idReceiver,mainArchivo);
+
             if(user.idUser==sms.idIssuing)
             {
+                userSearchSend=searchNamePOST(sms.idReceiver,mainArchivo);
                 printf("\n**************** Enviado de : %s \n", user.userName);
                 printf("\n**************** Para : %s \n", userSearchSend.userName);
-                printf("\n---> %s \n", sms.message);
-                printf("\n---> %d \n", sms.read);
+                messagesDisplay(sms);
+
+                statusRead(sms);
+                printf("\nEnviado el %s\n",sms.timeSend);
+            }
+        }
+        fclose(User_Archi);
+        fclose(mSn);
+    }
+}
+
+///***************************************************************************///
+///***************************************************************************///
+void statusRead(stMessenge sms)
+{
+    if(sms.read==1)
+    {
+        printf("\n Mensaje leido\n");
+    }
+    else
+    {
+        printf("\n Mensaje no leido\n");
+    }
+}
+///***************************************************************************///
+///***************************************************************************///
+void messagesDisplay(stMessenge sms)
+{
+    printf("\n Mensaje: %s\n",sms.message);
+}
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+int viwePendingInbox(stUser user,int currentID,char messangerUsuarios[], char mainArchivo[])
+{
+    int i=0;
+    stUser userSearchSend;
+    stMessenge sms;
+    FILE * User_Archi = fopen(mainArchivo,"rb");
+    FILE * mSn = fopen(messangerUsuarios,"rb");
+    if (User_Archi && mSn)
+    {
+        while(fread(&sms,sizeof(stMessenge),1,mSn)>0)
+        {
+
+
+            if(user.idUser==sms.idReceiver)
+            {
+
+                i++;
+            }
+
+        }
+        fclose(User_Archi);
+        fclose(mSn);
+    }
+
+    return i;
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+int viewInboxMessagerOk (stUser user,char mainArchivo[], char messangerUsuarios[])
+{
+    int flag=0;
+    stMessenge sms;
+
+    FILE * User_Arch = fopen(mainArchivo,"rb");
+    FILE * mSn = fopen(messangerUsuarios,"rb");
+    if(User_Arch && mSn)
+    {
+
+        while(flag==0 && fread(&sms,sizeof(stMessenge),1,mSn)>0)
+        {
+            if(user.idUser==sms.idReceiver && sms.read!=1)
+            {
+                flag=1;
+            }
+        }
+        fclose(User_Arch);
+        fclose(mSn);
+    }
+    return flag;
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+void inboxMessenger(stUser userSearch,int currentID,char messangerUsuarios[],char mainArchivo[],char currenTime[])
+{
+    stUser user,userSearch1;
+    stMessenge sms;
+    int i=1;
+    int flag1=0;
+    int j=0;
+    int v=0;
+    int op=0;
+    char userNameSearchR[20];
+    stUser arrayMessanger[10];
+    int arrayMessangerInd[10];
+    FILE * User_Arch = fopen(mainArchivo,"rb");
+    FILE * mSn = fopen(messangerUsuarios,"rb");
+    if(User_Arch && mSn)
+    {
+        while(fread(&user,sizeof(stUser),1,User_Arch))
+        {
+            if(user.idUser!=userSearch.idUser)
+            {
+                rewind(mSn);
+                while(fread(&sms,sizeof(stMessenge),1,mSn)>0)
+                {
+                    if(user.idUser==sms.idIssuing && userSearch.idUser==sms.idReceiver)
+                    {
+                        if(sms.read!=1)
+                            j++;
+                    }
+                }
+                flag1=loadInbox(j);
+                if(flag1==1)
+                {
+                    arrayMessangerInd[i]=j;
+                    arrayMessanger[i]=user;
+                    i++;
+                }
+                j=0;
+            }
+        }
+        v=viewMessagenPending(i,arrayMessangerInd,arrayMessanger);
+
+        printf("\nDesea ver mensajes \n 1 - SI \n 2 - NO \n\n");
+        fflush(stdin);
+        scanf("%d",&op);
+        if(op==1)
+        {
+            printf("\nIngrese el nombre de Usuario para ver los mensajes.\n");
+            fflush(stdin);
+            gets(userNameSearchR);
+            userSearch1=searchUserMessenge(userNameSearchR,mainArchivo);
+
+            viewMesenggesInbox(currentID,messangerUsuarios,mainArchivo,userSearch,userSearch1);
+            printf("\n\n\t\t\t ¿Quiere contestar el mensaje?\n\n\t\t\t 1 - Si \n\t\t\t 2 - No\n");
+            fflush(stdin);
+            scanf("%d",&op);
+            if(op==1)
+            {
+                replyMessage(currentID,messangerUsuarios,mainArchivo,userNameSearchR,currenTime);
+            }
+
+        }
+
+        fclose(User_Arch);
+        fclose(mSn);
+    }
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+void viewMesenggesInbox(int currentID,char messangerUsuarios[],char mainArchivo[],stUser userSearch,stUser userSearch1)
+{
+    stMessenge sms;
+    stMessenge arraySms[20];
+    int i=1;
+    FILE * User_Archi = fopen(mainArchivo,"r+b");
+    FILE * mSn = fopen(messangerUsuarios,"r+b");
+    if (User_Archi && mSn)
+    {
+        while(fread(&sms,sizeof(stMessenge),1,mSn)>0)
+        {
+            if(userSearch1.idUser==sms.idIssuing && userSearch.idUser==sms.idReceiver)
+            {
+                printf("\n*************************************************************");
+                printf("\n Enviado el dia %s\n",sms.timeSend);
+                printf("\n %s ", userSearch1.userName);
+                printf("\n---> %s", sms.message);
+                arraySms[i]=sms;
+                i++;
+            }
+            else if(userSearch1.idUser==sms.idReceiver && userSearch.idUser==sms.idIssuing)
+            {
+                printf("\n*************************************************************");
+                printf("\n  \t\t\t\t\t%s ", userSearch.userName);
+                printf("\n\n \t\t\t\t%s <---", sms.message);
+            }
+        }
+        statusMessangerRead(messangerUsuarios,mainArchivo,userSearch,arraySms,i);
+        fclose(User_Archi);
+        fclose(mSn);
+    }
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+void replyMessage (int currentID, char messangerUsuarios[], char mainArchivo[],char userNameSearchR[],char currenTime[])
+{
+    stMessenge sms;
+    stUser user,userSearch;
+    int idMessenge = lastIDsms(messangerUsuarios);
+    char name[20];
+
+    FILE * User_Archi = fopen(mainArchivo,"r+b");
+    FILE * mSn = fopen(messangerUsuarios,"ab");
+    if(User_Archi && mSn)
+    {
+        user=searchNamePOST(currentID,mainArchivo);
+
+        userSearch=searchUserMessenge(userNameSearchR,mainArchivo);
+        printf("\n\t usuarios emite %s\n",user.userName);
+        printf("\n\t usuarios recibe %s\n",userSearch.userName);
+        printf("\n\t Escriba el mensaje a %s \n", userSearch.userName);
+        fflush(stdin);
+        gets(sms.message);
+        strcpy(sms.timeSend,currenTime);
+        idMessenge++;
+        sms.idContent=idMessenge;
+        sms.idReceiver=userSearch.idUser; /// RECIBE
+        sms.idIssuing=user.idUser;        /// ENVIA
+        sms.read=0;
+
+        points(mainArchivo,currentID);
+        fwrite(&sms,sizeof(stMessenge),1,mSn);
+        fclose(mSn);
+        fclose(User_Archi);
+    }
+}
+
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+int loadInbox(int j)
+{
+    int flag=0;
+    if(j!=0)
+    {
+        flag=1;
+    }
+    return flag;
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+int viewMessagenPending(int i,int arrayMessangerInd[],stUser arrayMessanger[])
+{
+    int v=0;
+    for(v=1; v<i; v++)
+    {
+        printf("\nTienes total de mensajes %d",arrayMessangerInd[v]);
+        printf("\nUsuario %s\n\n",arrayMessanger[v].userName);
+    }
+    return v;
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+void statusMessangerRead(char messangerUsuarios[],char mainArchivo[],stUser userSearch,stMessenge arraySms[],int validos)
+{
+    stMessenge sms;
+    int i;
+    FILE * User_Arch =fopen (mainArchivo,"r+b");
+    FILE * mSn =fopen (messangerUsuarios,"r+b");
+    if(mSn)
+    {
+        for(i=0; i<validos; i++)
+        {
+            sms=arraySms[i];
+            if(sms.read!=1)
+            {
+                fseek(mSn,(sms.idContent-1)*sizeof(stMessenge),SEEK_SET);
+                fread(&sms,sizeof(stMessenge),1,mSn);
+                sms.read=1;
+                fseek(mSn,(sms.idContent-1)*sizeof(stMessenge),SEEK_SET);
+                fwrite(&sms,sizeof(stMessenge),1,mSn);
+            }
+        }
+        fclose(User_Arch);
+        fclose(mSn);
+    }
+}
+
+///***************************************************************************///
+///***************************************************************************///  MENSAJERIA
+
+void statusNENE(char messangerUsuarios[],char mainArchivo[],stUser userSearch)
+{
+    stMessenge sms;
+    FILE * User_Arch =fopen (mainArchivo,"r+b");
+    FILE * mSn =fopen (messangerUsuarios,"r+b");
+    if(User_Arch && mSn)
+    {
+        while(fread(&sms,sizeof(stMessenge),1,mSn)>0)
+        {
+            if(userSearch.idUser==sms.idReceiver)
+            {
+                printf("\n user %s",userSearch.userName);
+                printf("\n read %d",sms.read);
+            }
+        }
+        fclose(User_Arch);
+        fclose(mSn);
+    }
+    system("pause");
+}
+///***************************************************************************/// Muestra los usuarios disponibles para enviar un mensaje
+void displayUsersName(char mainArchivo[], int currentID)
+{
+    stUser user;
+    FILE *User_Arch =fopen(mainArchivo,"rb");
+    if(User_Arch)
+    {
+
+        while(fread(&user,sizeof(stUser),1,User_Arch)>0 && user.status!=0)
+        {
+            if(user.idUser!=currentID)
+            {
+                printf("\n Usuario disponibles: %s \n",user.userName);
             }
         }
     }
 }
+///***************************************************************************/// Muestra los usuarios disponibles para enviar un mensaje
