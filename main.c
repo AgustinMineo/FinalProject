@@ -32,7 +32,6 @@ typedef struct
     int cost;
     char time[30];
     char places[100];
-    int share;                   ///EN CURSO
     char feedback[60];
     char currentTIME[50];
     int idFeedback;
@@ -47,15 +46,12 @@ typedef struct
     char userName[30];
     char password[30];
     char city[50];
-    char places[150];
     int age;
     char email[50];
     char gender[30];
     int points;
     int level;
     char ranki[20];
-    char topics[50];
-    int role;              ///EN CURSO
     int status;
 } stUser;
 
@@ -74,11 +70,12 @@ int main()
     stPublish publish [dim_publish];
     stUser user [dim_users];
     stMessenge messagesUser[dim_messenge];
-
+    ///-////////////////////////////////////////////////////// Current Time
     time_t tiempo = time(0);
     struct tm *tlocal = localtime(&tiempo);
     char currentTIME[50];
     strftime(currentTIME,50,"%d/%m/%y a las %H:%M:%S",tlocal);
+    ///-//////////////////////////////////////////////////////
 
     int control,menu;
     do
@@ -273,11 +270,6 @@ void registe(char mainArchivo[])
             {
                 printf("\n  DNI ya registrado, ingrese un nuevo DNI\n");
             }
-            flag=sizeDNI(user.dni);
-            if(flag==1)
-            {
-                printf("\n DNI incorrecto\n");
-            }
         }
         while(flag==1);
 
@@ -327,20 +319,6 @@ void registe(char mainArchivo[])
     }
 }
 
-///**********************************************************************************************************/// VALIDAR DNI STRLEN
-int sizeDNI(int dni)
-{
-    int flag=0;
-    int value=0;
-
-    value=strlen(dni);
-    if(value<8 || value>8)
-    {
-        flag=1;
-    }
-    return flag;
-}
-///**********************************************************************************************************/// VALIDAR DNI STRLEN
 
 ///**********************************************************************************************************/// VALIDACION DNI
 
@@ -589,18 +567,14 @@ void randomPost(int validosRandom, int allPostArray[],char publishArch[],char ma
     FILE *User_Arch = fopen(mainArchivo,"rb");
     if(pOpen && User_Arch)
     {
-        printf("\n HOLA 1\n");
         while(i<5)
         {
             do
             {
                 random=allPostArray[rand()%validosRandom];
-                printf("\n HOLA 2 %d\n",random);
-                //randomArray[i]=random;
-                flag=randomValuePost(random,randomArray,validosRandom);
+                flag=randomValuePost(random,randomArray);
             }
-            while(flag==1);
-            printf("\n HOLA 3\n");
+            while(flag==0);
             showPostID(publishArch,random,mainArchivo);
             i++;
         }
@@ -612,17 +586,17 @@ void randomPost(int validosRandom, int allPostArray[],char publishArch[],char ma
 ///**********************************************************************************************************///Random Post
 
 ///**********************************************************************************************************///
-int randomValuePost(int random,int randomArray[],int validosRandom)
+int randomValuePost(int random,int randomArray[])
 {
-    int flag=1;
+    int flag;
     int i=0;
 
-    while(i<validosRandom)
+    while(i<5 && flag==0)
     {
 
         if(random!=randomArray[i])
         {
-            flag=0;
+            flag=1;
             randomArray[i]=random;
         }
         i++;
@@ -648,9 +622,9 @@ void otherMenu(int currentID, char mainArchivo[],char publishArch[],char current
         printf("\n\t Seleccione que accion quiere realizar \n\n");
         printf("\n\t\t [1] - Ver 5 post aleatorios \n");
         printf("\n\t\t [2] - Dar like a post \n");
-        printf("\n\t\t [3] - Comentar post \n");
-        printf("\n\t\t [4] - Feedback de post \n");
-        printf("\n\t\t [5] - Reportar post \n");
+        printf("\n\t\t [3] - Feedback de post \n");
+        printf("\n\t\t [4] - Reportar post \n");
+        printf("\n\t\t [5] - Ver posts reportados \n");
         printf("\n\t\t [6] - Salir\n");
         printf("\n\t\t  ");
         scanf("%d",&menu);
@@ -661,9 +635,6 @@ void otherMenu(int currentID, char mainArchivo[],char publishArch[],char current
 
             validosRandom=idPostToArray(publishArch,allPostArray);
             randomPost(validosRandom,allPostArray,publishArch,mainArchivo);
-            //printf("\nID POST WACHO\n");
-            // scanf("%d",&idPost);
-            // showPostID(publishArch,idPost,mainArchivo);
             break;
         case 2:
             showPublish(publishArch,mainArchivo,currentID,currentTIME);
@@ -672,16 +643,15 @@ void otherMenu(int currentID, char mainArchivo[],char publishArch[],char current
             postLike(publishArch,like,mainArchivo,currentID);
             break;
         case 3:
-
-            break;
-        case 4:
             feedbackMenu(publishArch,mainArchivo,currentID,currentTIME);
             break;
-        case 5:
+        case 4:
             showPublish(publishArch,mainArchivo,currentID,currentTIME);
             printf("\n Ingrese el ID del post a reportar\n");
             scanf("%d",&reportID);
             reportPost(publishArch,reportID);
+            break;
+        case 5:
             showReport(publishArch,mainArchivo);
             break;
         case 6:
@@ -778,13 +748,11 @@ void reportPost(char publishArch[],int reportID)
         if(fread(&post,sizeof(stPublish),1,pPost)>0)
         {
             disablePost(publishArch,reportID);
-            printf("\n%d --------> REPORT\n",reportID);
             fseek(pPost,(reportID-1)*sizeof(stPublish),SEEK_SET);
             fread(&post,sizeof(stPublish),1,pPost);
             printf("\nIngrese la razon por el reporte\n");
             fflush(stdin);
             gets(post.report);
-            printf("\n%s --------> POST REPORT\n",post.report);
             fseek(pPost,(reportID-1)*sizeof(stPublish),SEEK_SET);
             fwrite(&post,sizeof(stPublish),1,pPost);
         }
@@ -838,6 +806,7 @@ void editUserMenu(int currentID, char mainArchivo[])
         printf("\n\t\t[5] - Cambiar Percepcion de genero\n");
         printf("\n\t\t[6] - Mostrar Perfil\n");
         printf("\n\t\t[7] - Dar de baja la cuenta\n");
+        printf("\n\t\t[8] - Usuarios dados de baja\n");
         printf("\n\t\t[0] - Volver al Menu Principal\n");
         printf("\n\n\t\t  ");
 
@@ -892,6 +861,9 @@ void editUserMenu(int currentID, char mainArchivo[])
                 }
             }
             break;
+        case 8:
+            showUserOff(mainArchivo);
+            break;
         }
         printf("\n\n  Cualquier tecla para volver, ESC para Menu Principal...\n");
         fflush(stdin);
@@ -906,9 +878,9 @@ void editUserMenu(int currentID, char mainArchivo[])
 ///***************************************************************************/// EDITOR  ///REVISAR?///////////////////////////////
 ///***************************************************************************/// EDITOR  ///REVISAR?///////////////////////////////
 
-void showUserOff(char archivo[]) // Perfil admin only
+void showUserOff(char mainArchivo[])
 {
-    FILE *User_Arch = fopen(archivo, "rb");
+    FILE *User_Arch = fopen(mainArchivo, "rb");
     stUser a;
     if(User_Arch)
     {
@@ -944,10 +916,10 @@ void editUserCity(char mainArchivo[],int currentID, char newCity[50])
 
 ///*************************************************************************/// STATUS
 
-int editUserStatus(char arch[], int currentID)
+int editUserStatus(char mainArchivo[], int currentID)
 {
     int flag=0;
-    FILE *pArch = fopen(arch,"r+b");
+    FILE *pArch = fopen(mainArchivo,"r+b");
     stUser user;
     if(pArch)
     {
@@ -1969,8 +1941,6 @@ void sendMesengges (int currentID, char messangerUsuarios[], char mainArchivo[],
 
         fwrite(&sms,sizeof(stMessenge),1,mSn);
         points(mainArchivo,currentID);
-        printf("\n------------idRecibe%d",sms.idReceiver);
-        printf("\n------------idEnvia%d",sms.idIssuing);
         fclose(mSn);
     }
 }
@@ -2345,7 +2315,7 @@ void statusNENE(char messangerUsuarios[],char mainArchivo[],stUser userSearch)
     }
     system("pause");
 }
-///***************************************************************************/// Muestra los usuarios disponibles para enviar un mensaje
+///***************************************************************************///
 void displayUsersName(char mainArchivo[], int currentID)
 {
     stUser user;
